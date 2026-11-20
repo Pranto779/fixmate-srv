@@ -59,6 +59,16 @@ app.post('/booking',async(req,res)=>{
   const result=await bookingsCollection.insertOne(data)
   res.send(result)
 })
+app.get('/booking/:id',async(req,res)=>{
+  const id=req.params.id
+  const query={_id:ObjectId(id)}
+  const result=await bookingsCollection.findOne(query)
+  res.send(result)
+})
+app.get('/booking',async(req,res)=>{
+  const result=await bookingsCollection.find().toArray()
+  res.send(result)
+})
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
