@@ -50,6 +50,12 @@ app.get("/service/:id", async (req, res) => {
   const result = await servicesCollection.findOne(query);
   res.send(result);
 });
+app.delete('/serviceDelete:/id',async(req,res)=>{
+  const id=req.params.id
+  const query={_id:ObjectId(id)}
+  const result=await servicesCollection.deleteOne(query)
+  res.send(result)
+})
 app.patch("/service/:id", async (req, res) => {
   const id = req.params.id;
   const updatedService = req.body;
