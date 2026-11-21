@@ -31,10 +31,14 @@ const user=db.collection('user')
 app.get("/", (req, res) => {
   res.send("FixMate Server is running successfully");
 });
-app.get('/user',async(req,res)=>{
-  const result=await user.find().toArray()
-  res.send(result)
-})
+app.get('/user', async (req, res) => {
+  const result = await user
+    .find()
+    .sort({ _id: -1 })
+    .toArray();
+
+  res.send(result);
+});
 app.patch("/user/:id", async (req, res) => {
   try {
     const id = req.params.id;
