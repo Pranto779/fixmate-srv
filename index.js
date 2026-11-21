@@ -3,8 +3,8 @@ import express from "express";
 import cors from "cors";
 
 const app = express();
-app.use(cors())
-app.use(express.json())
+app.use(cors());
+app.use(express.json());
 
 const PORT = process.env.PORT || 8000;
 
@@ -44,31 +44,70 @@ app.get("/services/:email", async (req, res) => {
 
   res.send(result);
 });
-app.get('/service/:id',async(req,res)=>{
-  const id=req.params.id
-  const query={_id:new ObjectId(id)}
-  const result=await servicesCollection.findOne(query)
-  res.send(result)
-})
-app.get('/services',async(req,res)=>{
-  const result=await servicesCollection.find().toArray()
-  res.send(result)
-})
-app.post('/booking',async(req,res)=>{
-  const data=req.body
-  const result=await bookingsCollection.insertOne(data)
-  res.send(result)
-})
-app.get('/booking/:id',async(req,res)=>{
-  const id=req.params.id
-  const query={_id:ObjectId(id)}
+app.get("/service/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) };
+  const result = await servicesCollection.findOne(query);
+  res.send(result);
+});
+app.get("/services", async (req, res) => {
+  const result = await servicesCollection
+    .find()
+    .sort({ _id: -1 })
+    .toArray();
+
+  res.send(result);
+});
+app.post("/booking", async (req, res) => {
+  const data = req.body;
+  const result = await bookingsCollection.insertOne(data);
+  res.send(result);
+});
+app.get("/booking/:email", async (req, res) => {
+  const email = req.params.email;
+
+  const query = {
+    customerEmail: email,
+  };
+
+  const result = await bookingsCollection.find(query).toArray();
+
+  res.send(result);
+});
+app.get("/booking", async (req, res) => {
+  const result = await bookingsCollection.find().toArray();
+  res.send(result);
+});
+app.get('/booking/:email',async(req,res)=>{
+  const email=req.params.email
+  const query={email:email}
   const result=await bookingsCollection.findOne(query)
   res.send(result)
 })
-app.get('/booking',async(req,res)=>{
-  const result=await bookingsCollection.find().toArray()
-  res.send(result)
-})
+app.delete("/bookingDelete/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const query = {
+      _id: new ObjectId(id),
+    };
+
+    const result = await bookingsCollection.deleteOne(query);
+
+    res.status(200).send({
+      success: true,
+      deletedCount: result.deletedCount,
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).send({
+      success: false,
+      message: error.message,
+    });
+  }
+});
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
