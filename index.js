@@ -50,6 +50,23 @@ app.get("/service/:id", async (req, res) => {
   const result = await servicesCollection.findOne(query);
   res.send(result);
 });
+app.patch("/service/:id", async (req, res) => {
+  const id = req.params.id;
+  const updatedService = req.body;
+
+  const query = { _id: new ObjectId(id) };
+
+  const result = await servicesCollection.updateOne(
+    query,
+    {
+      $set: {
+        ...updatedService,
+      },
+    }
+  );
+
+  res.send(result);
+});
 app.get("/services", async (req, res) => {
   const result = await servicesCollection
     .find()
@@ -78,12 +95,52 @@ app.get("/booking", async (req, res) => {
   const result = await bookingsCollection.find().toArray();
   res.send(result);
 });
-app.get('/booking/:email',async(req,res)=>{
-  const email=req.params.email
-  const query={email:email}
-  const result=await bookingsCollection.findOne(query)
-  res.send(result)
-})
+app.get("/technician-bookings/:email", async (req, res) => {
+  try {
+    const email = decodeURIComponent(req.params.email);
+
+    const query = {
+      technicianEmail: email,
+    };
+
+    const result = await bookingsCollection
+      .find(query)
+      .sort({ _id: -1 })
+      .toArray();
+
+    res.send(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({
+      message: "Failed to get technician bookings",
+    });
+  }
+});
+app.patch("/booking-status/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!["pending", "accepted", "rejected"].includes(status)) {
+      return res.status(400).send({
+        message: "Invalid status",
+      });
+    }
+
+    const result = await bookingsCollection.updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $set: { status },
+      }
+    );
+
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({
+      message: "Failed to update status",
+    });
+  }
+});
 app.delete("/bookingDelete/:id", async (req, res) => {
   try {
     const id = req.params.id;
