@@ -71,30 +71,6 @@ app.patch("/user/:id", async (req, res) => {
 });
 app.delete("/users/:id", async (req, res) => {
   try {
-    const id = req.params.id;
-
-    const result = await user.deleteOne({
-      _id: new ObjectId(id),
-    });
-
-    if (result.deletedCount === 0) {
-      return res.status(404).send({
-        message: "User not found",
-      });
-    }
-
-    res.send({
-      success: true,
-      message: "User deleted successfully",
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({
-      message: "Failed to delete user",
-    });
-  }
-});app.delete("/users/:id", async (req, res) => {
-  try {
     const { id } = req.params;
 
     const result = await user.deleteOne({
@@ -125,6 +101,62 @@ app.post("/services", async (req, res) => {
   const query = req.body;
   const result = await servicesCollection.insertOne(query);
   res.send(result);
+});
+
+
+
+// Update Service Status new
+// Update Service Approval Status
+app.patch("/service-status/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { approvalStatus } = req.body;
+
+    console.log("Service ID:", id);
+    console.log("Approval Status:", approvalStatus);
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).send({
+        success: false,
+        message: "Invalid service ID",
+      });
+    }
+
+    if (!["accepted", "cancelled"].includes(approvalStatus)) {
+      return res.status(400).send({
+        success: false,
+        message: "Invalid approval status",
+      });
+    }
+
+    const result = await servicesCollection.updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $set: {
+          approvalStatus: approvalStatus,
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).send({
+        success: false,
+        message: "Service not found",
+      });
+    }
+
+    res.send({
+      success: true,
+      message: "Service approval status updated successfully",
+    });
+  } catch (error) {
+    console.error("Service Status Error:", error);
+
+    res.status(500).send({
+      success: false,
+      message: error.message,
+    });
+  }
 });
 app.get("/services/:email", async (req, res) => {
   const email = req.params.email;
