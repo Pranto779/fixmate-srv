@@ -247,25 +247,75 @@ app.get("/technician-bookings/:email", async (req, res) => {
 app.patch("/booking-status/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, finalAmount } = req.body;
 
-    if (!["pending", "accepted", "rejected"].includes(status)) {
+    const allowedStatus = [
+      "requested",
+      "pending",
+      "accepted",
+      "rejected",
+      "in-progress",
+      "completed",
+      "cancelled",
+    ];
+
+    const updateData = {};
+
+    // Status update
+    if (status !== undefined) {
+      if (!allowedStatus.includes(status)) {
+        return res.status(400).send({
+          message: "Invalid status",
+        });
+      }
+
+      updateData.status = status;
+    }
+
+    // Final Amount update (optional)
+    if (finalAmount !== undefined) {
+      if (
+        typeof finalAmount !== "number" ||
+        !Number.isFinite(finalAmount) ||
+        finalAmount < 0
+      ) {
+        return res.status(400).send({
+          message: "Invalid final amount",
+        });
+      }
+
+      updateData.finalAmount = finalAmount;
+    }
+
+    if (Object.keys(updateData).length === 0) {
       return res.status(400).send({
-        message: "Invalid status",
+        message: "Nothing to update",
       });
     }
 
     const result = await bookingsCollection.updateOne(
       { _id: new ObjectId(id) },
       {
-        $set: { status },
+        $set: updateData,
       }
     );
 
-    res.send(result);
+    if (result.matchedCount === 0) {
+      return res.status(404).send({
+        message: "Booking not found",
+      });
+    }
+
+    res.send({
+      success: true,
+      message: "Booking updated successfully",
+      result,
+    });
   } catch (error) {
+    console.error("Booking Update Error:", error);
+
     res.status(500).send({
-      message: "Failed to update status",
+      message: "Failed to update booking",
     });
   }
 });
